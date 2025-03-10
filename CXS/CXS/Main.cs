@@ -15,6 +15,7 @@ public class Main : BaseMod
     public static RaceCar LocalPlayerCar => !PlayerCarControl.instance ? GameObject.Find("CarPositionMarker").GetComponent<RaceCar>() : PlayerCarControl.instance.car;
     private Rect windowRect_ = new Rect(0, 0, 200, 200);
     private bool showWindow_;
+    public static string ButtonText;
 
     #endregion
 
@@ -25,6 +26,8 @@ public class Main : BaseMod
         Patcher.Init();
         Patcher.TryPatch(typeof(OnCarLoaded));
         Kino.Input.Bind(KeyCode.None, ToggleUI, "Toggle UI");
+        Kino.Input.Bind(KeyCode.None, ScaleCar, "Scale Car");
+        Kino.Input.Bind(KeyCode.None, ResetCarScale, "Reset Scale");
     }
 
     private void Update()
@@ -131,43 +134,14 @@ public class Main : BaseMod
             }
             GUILayout.EndHorizontal();
             
-            if (GUILayout.Button("Scale Car"))
+            if (GUILayout.Button(CarScaler.ScaleAnimationRunning ? ButtonText : "Scale Car"))
             {
-                if (States.mainCurrent is GarageGUIState)
-                {
-                    GUICommonGodVoice.ShowText("Join a lobby or training session first!", 3f);
-                    return;
-                }
-                
-                if (CarScaler.ScaleAnimationRunning)
-                    GUICommonGodVoice.ShowText("Scale animation in progress, please wait.", 3f);
-                
-                StartCoroutine(CarScaler.ScaleCar(LocalPlayerCar, CarScaler.LocalScaleX, CarScaler.LocalScaleY, CarScaler.LocalScaleZ, CarScaler.ScaleAnimationDuration));
+                ScaleCar();
             }
             
-            if (GUILayout.Button("Reset Scale"))
+            if (GUILayout.Button(CarScaler.ScaleAnimationRunning ? ButtonText : "Reset Scale"))
             {
-                if (States.mainCurrent is GarageGUIState)
-                {
-                    GUICommonGodVoice.ShowText("Join a lobby or training session first!", 3f);
-                    return;
-                }
-                
-                CarScaler.LocalScaleX = 1f;
-                CarScaler.LocalScaleY = 1f;
-                CarScaler.LocalScaleZ = 1f;
-                StartCoroutine(CarScaler.ScaleCar(LocalPlayerCar, 1f, 1f, 1f));
-                try
-                {
-                    if (States.mainCurrent is SyncNetFreerideRaceModeState)
-                        UINotifications.instance.Add("Scale reset!", Color.green);
-                    else
-                        GUICommonGodVoice.ShowText("Scale reset!", 3f);
-                }
-                catch (Exception e)
-                {
-                    Kino.Log.Error("Unable to show notification in reset scale, error: " + e.Message);
-                }
+                ResetCarScale();
             }
         }
         
@@ -190,6 +164,54 @@ public class Main : BaseMod
     private void ToggleUI()
     {
         showWindow_ = !showWindow_;
+    }
+
+    private void ScaleCar()
+    {
+        if (LocalPlayerCar == null)
+            return;
+        
+        if (LocalPlayerCar.transform.localScale == new Vector3(CarScaler.LocalScaleX, CarScaler.LocalScaleY, CarScaler.LocalScaleZ))
+            return;
+        
+        if (States.mainCurrent is GarageGUIState)
+        {
+            GUICommonGodVoice.ShowText("Join a lobby or training session first!", 3f);
+            return;
+        }
+                
+        if (CarScaler.ScaleAnimationRunning)
+            GUICommonGodVoice.ShowText("Scale animation in progress, please wait.", 3f);
+                
+        StartCoroutine(CarScaler.ScaleCarTimer(LocalPlayerCar, CarScaler.LocalScaleX, CarScaler.LocalScaleY, CarScaler.LocalScaleZ, CarScaler.ScaleAnimationDuration));
+    }
+
+    private void ResetCarScale()
+    {
+        if (LocalPlayerCar == null)
+            return;
+        
+        if (States.mainCurrent is GarageGUIState)
+        {
+            GUICommonGodVoice.ShowText("Join a lobby or training session first!", 3f);
+            return;
+        }
+                
+        CarScaler.LocalScaleX = 1f;
+        CarScaler.LocalScaleY = 1f;
+        CarScaler.LocalScaleZ = 1f;
+        StartCoroutine(CarScaler.ScaleCarTimer(LocalPlayerCar, 1f, 1f, 1f));
+        try
+        {
+            if (States.mainCurrent is SyncNetFreerideRaceModeState)
+                UINotifications.instance.Add("Scale reset!", Color.green);
+            else
+                GUICommonGodVoice.ShowText("Scale reset!", 3f);
+        }
+        catch (Exception e)
+        {
+            Kino.Log.Error("Unable to show notification in reset scale, error: " + e.Message);
+        }
     }
     
     private void OnApplicationQuit()
