@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using CarX;
 using CXS.Harmony;
 using HUD;
 using KSL.API;
@@ -16,6 +17,9 @@ public class Main : BaseMod
     private Rect windowRect_ = new Rect(0, 0, 200, 200);
     private bool showWindow_;
     public static string ButtonText;
+    public static float FrontDownforce;
+    public static float RearDownforce;
+    public static float CarMass;
 
     #endregion
 
@@ -59,8 +63,61 @@ public class Main : BaseMod
 
             GUILayout.Label($"Scale Animation Speed: {CarScaler.ScaleAnimationDuration}");
             Utils.UI.IncrementedSlider(ref CarScaler.ScaleAnimationDuration, 1f, 10f);
+
+            GUILayout.Label($"Car Front Downforce: {FrontDownforce:0}%");
+            if (Utils.UI.IncrementedSlider(ref FrontDownforce, 100f, 5000f, 5f))
+            {
+                CarDesc carDesc = null;
+                LocalPlayerCar.carX.GetCarDesc(ref carDesc);
+                carDesc.aero.frontDownforce = FrontDownforce;
+                LocalPlayerCar.carX.SetCarDesc(carDesc, true);
+            }
             
-            GUILayout.Space(5f);
+            GUILayout.Label($"Car Rear Downforce: {RearDownforce:0}%");
+            if (Utils.UI.IncrementedSlider(ref RearDownforce, 100f, 5000f, 5f))
+            {
+                CarDesc carDesc = null;
+                LocalPlayerCar.carX.GetCarDesc(ref carDesc);
+                carDesc.aero.frontDownforce = RearDownforce;
+                LocalPlayerCar.carX.SetCarDesc(carDesc, true);
+            }
+
+            GUILayout.Label($"Car Mass: {CarMass:0}kg", GUILayout.Width(90));
+            if (Utils.UI.IncrementedSlider(ref CarMass, 100F, 5000f, 5f))
+            {
+                CarDesc carDesc = null;
+                LocalPlayerCar.carX.GetCarDesc(ref carDesc);
+                carDesc.weight.mass = CarMass;
+                LocalPlayerCar.carX.SetCarDesc(carDesc, true);
+            }
+
+            GUILayout.Space(10f);
+            
+            if (GUILayout.Button("Reset Car Settings"))
+            {
+                CarDesc carDesc = null;
+                LocalPlayerCar.carX.GetCarDesc(ref carDesc);
+                carDesc.aero.frontDownforce = OnCarLoaded.FrontDownForce;
+                carDesc.aero.rearDownforce = OnCarLoaded.RearDownForce;
+                carDesc.weight.mass = OnCarLoaded.CarMass;
+                CarMass = OnCarLoaded.CarMass;
+                FrontDownforce = OnCarLoaded.FrontDownForce;
+                RearDownforce = OnCarLoaded.RearDownForce;
+                LocalPlayerCar.carX.SetCarDesc(carDesc, true);
+                try
+                {
+                    if (States.mainCurrent is SyncNetFreerideRaceModeState)
+                        UINotifications.instance.Add("Car settings reset!", Color.green);
+                    else
+                        GUICommonGodVoice.ShowText("Car settings reset!", 3f);
+                }
+                catch (Exception e)
+                {
+                    Kino.Log.Error("Unable to show notification in reset car settings, error: " + e.Message);
+                }
+            }
+            
+            GUILayout.Space(10f);
             
             // All Scales       
             GUILayout.BeginHorizontal();                                                                                             
@@ -170,9 +227,21 @@ public class Main : BaseMod
     {
         if (LocalPlayerCar == null)
             return;
-        
+
         if (LocalPlayerCar.transform.localScale == new Vector3(CarScaler.LocalScaleX, CarScaler.LocalScaleY, CarScaler.LocalScaleZ))
-            return;
+        {
+            try
+            {
+                if (States.mainCurrent is SyncNetFreerideRaceModeState)
+                    UINotifications.instance.Add("Scale already set!", Color.green);
+                else
+                    GUICommonGodVoice.ShowText("Scale already set!", 3f);
+            }
+            catch (Exception e)
+            {
+                Kino.Log.Error("Unable to show notification in scale car, error: " + e.Message);
+            }
+        }
         
         if (States.mainCurrent is GarageGUIState)
         {
@@ -190,6 +259,23 @@ public class Main : BaseMod
     {
         if (LocalPlayerCar == null)
             return;
+
+        if (LocalPlayerCar.transform.localScale == Vector3.one)
+        {
+            try
+            {
+                if (States.mainCurrent is SyncNetFreerideRaceModeState)
+                    UINotifications.instance.Add("Car already at default scale!", Color.green);
+                else
+                    GUICommonGodVoice.ShowText("Car already at default scale!", 3f);
+            }
+            catch (Exception e)
+            {
+                Kino.Log.Error("Unable to show notification in reset scale, error: " + e.Message);
+            }
+            
+            return;
+        }
         
         if (States.mainCurrent is GarageGUIState)
         {

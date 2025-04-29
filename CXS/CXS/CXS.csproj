@@ -45,6 +45,9 @@
         <Reference Include="Assembly-CSharp-firstpass">
           <HintPath>..\..\..\..\SteamLibrary\steamapps\common\CarX Drift Racing Online\Drift Racing Online_Data\Managed\publicized_assemblies\Assembly-CSharp-firstpass_publicized.dll</HintPath>
         </Reference>
+        <Reference Include="CarX.Plugins.Core">
+          <HintPath>..\..\..\..\SteamLibrary\steamapps\common\CarX Drift Racing Online\Drift Racing Online_Data\Managed\publicized_assemblies\CarX.Plugins.Core_publicized.dll</HintPath>
+        </Reference>
         <Reference Include="KSL.API">
           <HintPath>..\..\..\..\SteamLibrary\steamapps\common\CarX Drift Racing Online\ksl_sdk\API\KSL.API.dll</HintPath>
         </Reference>

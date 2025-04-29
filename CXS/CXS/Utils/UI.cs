@@ -45,8 +45,7 @@ public static class UI
         return windowRect;
     }
 
-    public static bool IncrementedSlider(ref float value, float min, float max, float increment = 1,
-        params GUILayoutOption[] options)
+    public static bool IncrementedSlider(ref float value, float min, float max, float increment = 1, params GUILayoutOption[] options)
     {
         float newVal = GUILayout.HorizontalSlider(value, min, max, options);
         if (Mathf.Approximately(newVal, value))
